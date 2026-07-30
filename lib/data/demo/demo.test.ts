@@ -44,6 +44,38 @@ describe("demo provider — queryRange", () => {
   });
 });
 
+describe("demo provider — getVm", () => {
+  it("returns a known host and null for an unknown one", async () => {
+    const vm = await demoProvider.getVm("postgresql");
+    expect(vm?.name).toBe("postgresql");
+    expect(await demoProvider.getVm("does-not-exist")).toBeNull();
+  });
+});
+
+describe("demo provider — vmAction", () => {
+  it("stops then starts a VM, reflecting the new status", async () => {
+    const stopped = await demoProvider.vmAction("nextcloud", "stop");
+    expect(stopped.status).toBe("stopped");
+    expect(stopped.cpu).toBe(0);
+    expect((await demoProvider.getVm("nextcloud"))?.status).toBe("stopped");
+
+    const started = await demoProvider.vmAction("nextcloud", "start");
+    expect(started.status).toBe("running");
+    expect(started.cpu).toBeGreaterThan(0);
+  });
+});
+
+describe("demo provider — extended metrics", () => {
+  it("serves disk, network and load series in range", async () => {
+    for (const metric of ["disk", "net_in", "net_out", "load"] as const) {
+      const series = await demoProvider.queryRange(metric, "1h", ["postgresql"]);
+      expect(series).toHaveLength(1);
+      expect(series[0].points.length).toBeGreaterThanOrEqual(12);
+      for (const p of series[0].points) expect(p.v).toBeGreaterThanOrEqual(0);
+    }
+  });
+});
+
 describe("demo provider — getHealth / getAlerts", () => {
   it("summarises the fleet in demo mode", async () => {
     const h = await demoProvider.getHealth();

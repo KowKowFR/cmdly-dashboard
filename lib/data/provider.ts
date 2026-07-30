@@ -4,6 +4,7 @@ import type {
   MetricKind,
   MetricSeries,
   RangeKey,
+  VmAction,
   VmStatus,
 } from "./types";
 
@@ -17,11 +18,15 @@ import type {
  */
 export interface DataProvider {
   getVms(): Promise<VmStatus[]>;
+  /** One VM by inventory name, or null if unknown. */
+  getVm(name: string): Promise<VmStatus | null>;
   queryRange(
     metric: MetricKind,
     range: RangeKey,
     instances?: string[],
   ): Promise<MetricSeries[]>;
+  /** Power action on a Proxmox-managed VM; resolves to its updated status. */
+  vmAction(name: string, action: VmAction): Promise<VmStatus>;
   getAlerts(): Promise<Alert[]>;
   getHealth(): Promise<HealthSummary>;
 }

@@ -32,8 +32,27 @@ export interface MetricSeries {
 /** Time window for range queries. */
 export type RangeKey = "1h" | "6h" | "24h";
 
-/** Metrics exposed by the P0 range API. */
-export type MetricKind = "cpu" | "mem";
+/** Metrics exposed by the range API (P0: cpu/mem; P1 adds the rest). */
+export type MetricKind =
+  | "cpu"
+  | "mem"
+  | "disk"
+  | "net_in"
+  | "net_out"
+  | "load";
+
+export const METRIC_KINDS: MetricKind[] = [
+  "cpu",
+  "mem",
+  "disk",
+  "net_in",
+  "net_out",
+  "load",
+];
+
+/** VM power actions (Proxmox). */
+export type VmAction = "start" | "stop" | "reboot" | "shutdown";
+export const VM_ACTIONS: VmAction[] = ["start", "stop", "reboot", "shutdown"];
 
 export interface Alert {
   fingerprint: string;

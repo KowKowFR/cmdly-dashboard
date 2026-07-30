@@ -1,5 +1,6 @@
 import type { DataProvider } from "./provider";
 import { demoProvider } from "./demo";
+import { liveProvider } from "./live";
 
 /**
  * Selects the active data provider from CMDLY_MODE ("demo" default | "live").
@@ -12,8 +13,7 @@ export function getProvider(): DataProvider {
   const mode = process.env.CMDLY_MODE === "live" ? "live" : "demo";
   switch (mode) {
     case "live":
-      // TODO(P1): return liveProvider once real adapters land.
-      return demoProvider;
+      return liveProvider;
     default:
       return demoProvider;
   }
