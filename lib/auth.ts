@@ -8,10 +8,23 @@ import { db } from "./db";
  *
  * Hardening (P6): disable the sign-up endpoint once seeding is done.
  */
+/**
+ * Origins better-auth will accept requests from (CSRF protection). The
+ * baseURL origin is trusted by default; add any extra hosts (e.g. the bastion
+ * VPN IP when accessed directly) via CMDLY_TRUSTED_ORIGINS (comma-separated).
+ */
+const extraTrustedOrigins = (process.env.CMDLY_TRUSTED_ORIGINS ?? "")
+  .split(",")
+  .map((s) => s.trim())
+  .filter(Boolean);
+
 export const auth = betterAuth({
   database: db,
   baseURL: process.env.BETTER_AUTH_URL ?? "http://127.0.0.1:8700",
   secret: process.env.BETTER_AUTH_SECRET,
+  ...(extraTrustedOrigins.length > 0
+    ? { trustedOrigins: extraTrustedOrigins }
+    : {}),
   emailAndPassword: {
     enabled: true,
     minPasswordLength: 10,

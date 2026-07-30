@@ -6,6 +6,7 @@
     "dev": "next dev -H 127.0.0.1 -p 8700",
     "build": "next build",
     "start": "next start -H 127.0.0.1 -p 8700",
+    "start:lan": "next start -H 0.0.0.0 -p 8700",
     "lint": "eslint",
     "test": "vitest run",
     "test:watch": "vitest",
