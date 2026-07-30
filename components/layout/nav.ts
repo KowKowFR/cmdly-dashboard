@@ -20,7 +20,7 @@ export type NavItem = {
 
 export const NAV: NavItem[] = [
   { href: "/overview", label: "Vue d'ensemble", icon: LayoutDashboard },
-  { href: "/infra", label: "Infrastructure", icon: Server, soon: "P1" },
+  { href: "/infra", label: "Infrastructure", icon: Server },
   { href: "/metrics", label: "Métriques", icon: Activity, soon: "P2" },
   { href: "/deploy", label: "Déploiement", icon: Boxes, soon: "P3" },
   { href: "/config", label: "Configuration", icon: Settings2, soon: "P4" },
