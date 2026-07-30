@@ -1,10 +1,17 @@
+import { KpiRow } from "@/components/overview/kpi-row";
+import { FleetChart } from "@/components/overview/fleet-chart";
+import { AlertsPanel } from "@/components/overview/alerts-panel";
+import { HostGrid } from "@/components/overview/host-grid";
+
 export default function OverviewPage() {
   return (
-    <div className="space-y-2">
-      <h2 className="font-display text-lg font-semibold">Vue d&apos;ensemble</h2>
-      <p className="text-sm text-muted-foreground">
-        KPIs, grille des hôtes et graphes de flotte — assemblés au jalon P0 (T9).
-      </p>
+    <div className="space-y-6">
+      <KpiRow />
+      <div className="grid gap-4 lg:grid-cols-3">
+        <FleetChart className="lg:col-span-2" />
+        <AlertsPanel />
+      </div>
+      <HostGrid />
     </div>
   );
 }

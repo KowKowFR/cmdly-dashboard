@@ -116,7 +116,7 @@ export function TimeSeriesChart({
 
   return (
     <ResponsiveContainer width="100%" height={height}>
-      <AreaChart data={rows} margin={{ top: 8, right: 8, left: -12, bottom: 0 }}>
+      <AreaChart data={rows} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
         <defs>
           {series.map((s) => {
             const c = colors[s.colorVar] || "#2e5aac";
@@ -149,7 +149,7 @@ export function TimeSeriesChart({
           tick={{ fill: axis, fontSize: 11 }}
           tickLine={false}
           axisLine={false}
-          width={40}
+          width={48}
           tickFormatter={(v) => `${v}${unit}`}
         />
         <Tooltip
