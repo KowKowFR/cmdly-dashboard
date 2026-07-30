@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { rangeQuerySchema, parseRangeQuery } from "./schemas";
+import { rangeQuerySchema, parseRangeQuery, vmActionBodySchema } from "./schemas";
 
 describe("rangeQuerySchema", () => {
   it("accepts a supported metric and range", () => {
@@ -7,11 +7,25 @@ describe("rangeQuerySchema", () => {
     expect(rangeQuerySchema.safeParse({ metric: "mem", range: "24h" }).success).toBe(true);
   });
 
+  it("accepts the P1 metrics (disk, network, load)", () => {
+    for (const metric of ["disk", "net_in", "net_out", "load"]) {
+      expect(rangeQuerySchema.safeParse({ metric, range: "6h" }).success).toBe(true);
+    }
+  });
+
   it("rejects unknown metrics and ranges", () => {
-    expect(rangeQuerySchema.safeParse({ metric: "disk", range: "1h" }).success).toBe(false);
+    expect(rangeQuerySchema.safeParse({ metric: "gpu", range: "1h" }).success).toBe(false);
     expect(rangeQuerySchema.safeParse({ metric: "cpu", range: "99h" }).success).toBe(false);
     // metric is required; range defaults to 1h so it may be omitted.
     expect(rangeQuerySchema.safeParse({ range: "1h" }).success).toBe(false);
+  });
+});
+
+describe("vmActionBodySchema", () => {
+  it("accepts valid actions and rejects unknown ones", () => {
+    expect(vmActionBodySchema.safeParse({ action: "reboot", confirm: true }).success).toBe(true);
+    expect(vmActionBodySchema.safeParse({ action: "nuke", confirm: true }).success).toBe(false);
+    expect(vmActionBodySchema.safeParse({ action: "stop" }).success).toBe(false);
   });
 });
 
@@ -37,6 +51,6 @@ describe("parseRangeQuery", () => {
   });
 
   it("fails on an invalid metric", () => {
-    expect(parseRangeQuery(new URLSearchParams("metric=disk")).success).toBe(false);
+    expect(parseRangeQuery(new URLSearchParams("metric=gpu")).success).toBe(false);
   });
 });

@@ -1,10 +1,26 @@
 import { z } from "zod";
 
-/** Metrics exposed by the P0 range API. */
-export const metricKindSchema = z.enum(["cpu", "mem"]);
+/** Metrics exposed by the range API. */
+export const metricKindSchema = z.enum([
+  "cpu",
+  "mem",
+  "disk",
+  "net_in",
+  "net_out",
+  "load",
+]);
 
 /** Supported time windows. */
 export const rangeKeySchema = z.enum(["1h", "6h", "24h"]);
+
+/** VM power actions. */
+export const vmActionSchema = z.enum(["start", "stop", "reboot", "shutdown"]);
+
+/** Body of a VM power-action request. */
+export const vmActionBodySchema = z.object({
+  action: vmActionSchema,
+  confirm: z.boolean(),
+});
 
 export const rangeQuerySchema = z.object({
   metric: metricKindSchema,
