@@ -1,16 +1,16 @@
-import { SoonPlaceholder } from "@/components/soon-placeholder";
+import { VmTable } from "@/components/infra/vm-table";
 
 export default function InfraPage() {
   return (
-    <SoonPlaceholder
-      milestone="P1"
-      title="Infrastructure / VMs"
-      description="Inventaire Proxmox en temps réel et pilotage de l'alimentation des machines."
-      features={[
-        "Tableau des VMs : nom, zone, IP, état, CPU %, RAM %, uptime",
-        "Actions start / stop / reboot avec confirmation",
-        "Page détail par VM : séries temporelles CPU / RAM / disque / réseau sur 1 h · 6 h · 24 h",
-      ]}
-    />
+    <div className="space-y-4">
+      <div>
+        <h2 className="font-display text-lg font-semibold">Infrastructure</h2>
+        <p className="text-sm text-muted-foreground">
+          Inventaire des machines et pilotage de leur alimentation. Clique sur une
+          machine pour ses métriques détaillées.
+        </p>
+      </div>
+      <VmTable />
+    </div>
   );
 }
