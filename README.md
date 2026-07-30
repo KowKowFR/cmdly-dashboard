@@ -1,36 +1,90 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# CMDLY — tableau de bord PRA
 
-## Getting Started
+Tableau de bord d'**observabilité** et de **pilotage** du Plan de Reprise d'Activité (PRA).
+Tourne **sur le bastion** (`/opt/pra-project/cmdly`, zone MGT `10.10.30.10`), écoute
+uniquement sur `127.0.0.1`, et se consulte **via un tunnel SSH** — jamais exposé publiquement.
 
-First, run the development server:
+> État : **jalon P0** livré. Scaffold, authentification, thème, et une *Vue d'ensemble*
+> complète alimentée par des données simulées (mode démo). Les jalons P1–P6 (Proxmox,
+> Prometheus, Terraform, Ansible, sauvegardes) suivent.
+
+## Stack
+
+Next.js 16 (App Router, TypeScript strict) · Tailwind v4 · shadcn/ui · Recharts ·
+better-auth (email/mot de passe) · SQLite (better-sqlite3) · zod · SWR · pnpm · Node 20+.
+
+## Architecture
+
+Aucune page ni route d'API n'appelle Proxmox / Prometheus / le système de fichiers
+directement : tout passe par un **DataProvider** sélectionné par `CMDLY_MODE`.
+
+- `CMDLY_MODE=demo` (défaut) — données simulées déterministes, sans bastion. Idéal
+  pour développer et pour la soutenance.
+- `CMDLY_MODE=live` — adaptateurs réels (Proxmox, Prometheus, Alertmanager), pertinents
+  sur le bastion. *(Arrivent aux jalons P1+.)*
+
+L'**inventaire** (`lib/inventory.ts`) est la source de vérité : 8 hôtes (nom, IP, zone,
+rôle). Aucune VM/hôte hors inventaire n'est accepté par l'API.
+
+## Développement
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+pnpm install
+cp .env.local.example .env.local     # puis renseigner les valeurs (voir ci-dessous)
+pnpm auth:migrate                    # crée les tables better-auth dans SQLite
+pnpm seed                            # crée le compte admin depuis .env.local
+pnpm dev                             # http://127.0.0.1:8700
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Autres commandes :
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+pnpm test         # tests unitaires (Vitest)
+pnpm build        # build de production
+pnpm start        # serveur de production (127.0.0.1:8700)
+pnpm lint         # ESLint
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Configuration (`.env.local`)
 
-## Learn More
+Voir `.env.local.example` pour la surface complète. Champs essentiels en P0 :
 
-To learn more about Next.js, take a look at the following resources:
+| Variable | Rôle |
+|---|---|
+| `CMDLY_MODE` | `demo` (défaut) ou `live` |
+| `CMDLY_DB_PATH` | chemin du fichier SQLite (défaut `./cmdly.db`) |
+| `BETTER_AUTH_SECRET` | secret d'authentification — `openssl rand -hex 32` |
+| `BETTER_AUTH_URL` / `NEXT_PUBLIC_BETTER_AUTH_URL` | `http://127.0.0.1:8700` |
+| `CMDLY_ADMIN_EMAIL` / `CMDLY_ADMIN_PASSWORD` | compte créé par `pnpm seed` |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Les secrets (token Proxmox, `.vault_pass`, clés R2 en mode live) **restent côté serveur**
+et ne sont jamais envoyés au client.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Déploiement sur le bastion
 
-## Deploy on Vercel
+```bash
+cd /opt/pra-project/cmdly
+pnpm install --prod=false && pnpm build
+# renseigner .env.local (secret, admin, CMDLY_MODE=live le moment venu)
+pnpm auth:migrate && pnpm seed
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+# service systemd
+sudo cp cmdly.service /etc/systemd/system/cmdly.service
+sudo systemctl daemon-reload
+sudo systemctl enable --now cmdly
+journalctl -u cmdly -f
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Accès (tunnel SSH)
+
+Le dashboard n'est **jamais** exposé. Depuis un poste autorisé :
+
+```bash
+ssh -L 8700:127.0.0.1:8700 adm-kowkow@10.10.30.10
+# puis ouvrir http://127.0.0.1:8700
+```
+
+## Sécurité
+
+Voir [`docs/SECURITE.md`](docs/SECURITE.md) : modèle de menace, liste blanche des
+commandes (Terraform/Ansible), et règles sur les secrets et les actions destructrices.

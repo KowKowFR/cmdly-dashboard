@@ -1,0 +1,35 @@
+[Unit]
+Description=CMDLY — tableau de bord PRA (Next.js)
+Documentation=file:/opt/pra-project/cmdly/README.md
+After=network.target
+
+[Service]
+Type=simple
+# Utilisateur dédié non privilégié recommandé (créé au déploiement).
+User=cmdly
+Group=cmdly
+WorkingDirectory=/opt/pra-project/cmdly
+
+# Secrets et configuration hors du dépôt.
+EnvironmentFile=/opt/pra-project/cmdly/.env.local
+Environment=NODE_ENV=production
+
+# Écoute strictement en local (127.0.0.1) — accès via tunnel SSH uniquement.
+ExecStart=/usr/bin/pnpm start
+
+Restart=on-failure
+RestartSec=5
+# La sortie va au journal systemd (journalctl -u cmdly).
+StandardOutput=journal
+StandardError=journal
+
+# Durcissement basique du service.
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=read-only
+# La base SQLite et le projet PRA doivent rester accessibles en écriture/lecture.
+ReadWritePaths=/opt/pra-project/cmdly
+
+[Install]
+WantedBy=multi-user.target
