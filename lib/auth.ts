@@ -21,4 +21,10 @@ export const auth = betterAuth({
     expiresIn: 60 * 60 * 24 * 7, // 7 days
     updateAge: 60 * 60 * 24, // refresh once per day
   },
+  advanced: {
+    // The bastion serves HTTP over an SSH tunnel (the tunnel is the encryption
+    // layer). Secure cookies would be dropped over HTTP and break login, so we
+    // only enable them when the base URL is actually HTTPS.
+    useSecureCookies: (process.env.BETTER_AUTH_URL ?? "").startsWith("https"),
+  },
 });

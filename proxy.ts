@@ -10,16 +10,17 @@ import { isPublicPath } from "@/lib/route-guard";
  */
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const hasSession = Boolean(getSessionCookie(request));
 
-  // Already signed in? Skip the login screen.
-  if (pathname === "/login") {
-    return hasSession
-      ? NextResponse.redirect(new URL("/overview", request.url))
-      : NextResponse.next();
+  // Public routes (login + better-auth) are ALWAYS reachable — checked first.
+  // This prevents a redirect loop when a stale/invalid session cookie is
+  // present: the proxy only sees the cookie exists, but the layout rejects the
+  // bad session and sends the user back to /login. If /login itself bounced to
+  // /overview on mere cookie presence, that would loop forever.
+  if (isPublicPath(pathname)) {
+    return NextResponse.next();
   }
 
-  if (isPublicPath(pathname) || hasSession) {
+  if (getSessionCookie(request)) {
     return NextResponse.next();
   }
 
