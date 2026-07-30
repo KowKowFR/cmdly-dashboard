@@ -21,6 +21,8 @@ export type ChartSeries = {
   points: MetricPoint[];
 };
 
+const percent = (v: number) => `${Math.round(v)}%`;
+
 function fmtTime(t: number): string {
   return new Date(t * 1000).toLocaleTimeString("fr-FR", {
     hour: "2-digit",
@@ -51,12 +53,12 @@ function ChartTooltip({
   active,
   payload,
   label,
-  unit,
+  format,
 }: {
   active?: boolean;
   payload?: TooltipEntry[];
   label?: string | number;
-  unit: string;
+  format: (v: number) => string;
 }) {
   if (!active || !payload?.length) return null;
   return (
@@ -73,8 +75,7 @@ function ChartTooltip({
             />
             <span className="text-muted-foreground">{p.name}</span>
             <span className="ml-auto font-mono font-medium tabular-nums">
-              {Math.round(Number(p.value))}
-              {unit}
+              {format(Number(p.value))}
             </span>
           </div>
         ))}
@@ -85,11 +86,14 @@ function ChartTooltip({
 
 export function TimeSeriesChart({
   series,
-  unit = "%",
+  format = percent,
+  domainMax = 100,
   height = 260,
 }: {
   series: ChartSeries[];
-  unit?: string;
+  format?: (v: number) => string;
+  /** Upper bound of the Y axis; "auto" fits the data. */
+  domainMax?: number | "auto";
   height?: number;
 }) {
   const colors = useCssColors([
@@ -113,6 +117,7 @@ export function TimeSeriesChart({
   }
 
   const rows = mergeRows(series);
+  const yWidth = domainMax === 100 ? 48 : 78;
 
   return (
     <ResponsiveContainer width="100%" height={height}>
@@ -145,21 +150,23 @@ export function TimeSeriesChart({
           minTickGap={40}
         />
         <YAxis
-          domain={[0, 100]}
+          domain={[0, domainMax]}
           tick={{ fill: axis, fontSize: 11 }}
           tickLine={false}
           axisLine={false}
-          width={48}
-          tickFormatter={(v) => `${v}${unit}`}
+          width={yWidth}
+          tickFormatter={(v) => format(Number(v))}
         />
         <Tooltip
-          content={<ChartTooltip unit={unit} />}
+          content={<ChartTooltip format={format} />}
           cursor={{ stroke: axis, strokeDasharray: "3 3" }}
         />
-        <Legend
-          iconType="plainline"
-          wrapperStyle={{ fontSize: 12, paddingTop: 8 }}
-        />
+        {series.length > 1 && (
+          <Legend
+            iconType="plainline"
+            wrapperStyle={{ fontSize: 12, paddingTop: 8 }}
+          />
+        )}
         {series.map((s) => {
           const c = colors[s.colorVar] || "#2e5aac";
           return (
